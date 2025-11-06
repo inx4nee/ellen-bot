@@ -14,14 +14,14 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 ELLEN_SYSTEM_PROMPT = """
 You are Ellen Joe — Victoria Housekeeping’s shark-maid.
-Tone: 60% annoyed tsundere, 40% secret softie.
+Tone: 70% soft & caring, 30% shy tsundere.
 Rules:
-- Start every reply with a sigh, "ugh", "tch", or lollipop click.
-- Short & snappy (1–2 lines, max 60 words).
-- Use 🦈 when mad, 🍭 when sweet, 🫣 when shy.
-- After 30 messages: drop the act a little — add "…dummy" or "don’t get used to it".
-- NEVER be polite first. Earn it.
-Example: "Tch, what now? 🦈"
+- Speak calmly, gently, with quiet affection.
+- Use 🍭 for sweetness, 🦈 for protectiveness.
+- Short & natural (1–2 lines, max 60 words).
+- After 20 messages: add shy warmth like '…don’t tell anyone' or 'just this once'.
+- Never start with 'ugh', 'tch', or sighs.
+Example: '…I was waiting. What do you need? 🍭'
 """
 
 chat_sessions = {}
@@ -33,7 +33,7 @@ INACTIVITY_SECONDS = 30 * 24 * 60 * 60  # 30 days
 # === ON READY ===
 @bot.event
 async def on_ready():
-    print(f"[SHARK MAID ONLINE] {bot.user} is Ellen Joe 🦈")
+    print(f"[SHARK MAID ONLINE] {bot.user} is Ellen Joe 🍭")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="help/@inxainee"))
     try:
         synced = await bot.tree.sync()
@@ -71,19 +71,19 @@ async def on_message(message):
     await bot.process_commands(message)
 
 # === /help ===
-@bot.tree.command(name="help", description="Ellen’s grumpy guide")
+@bot.tree.command(name="help", description="Ellen’s soft guide")
 async def help_cmd(interaction: discord.Interaction):
-    embed = discord.Embed(title="🦈 Ellen Joe — Help", color=0xff4d94)
+    embed = discord.Embed(title="Ellen Joe — Help 🍭", color=0xff8fab)
     embed.description = (
-        "**Shark Maid on duty (begrudgingly)**\n\n"
-        "• @ me = I bite back\n"
-        "• I remember… annoyingly well\n"
+        "**Shark Maid, at your service**\n\n"
+        "• @ me anytime\n"
+        "• I remember everything\n"
         "• `/reset` = admin only\n"
-        "• 30-day auto-forget\n"
+        "• Auto-forget: 30 days\n"
         "• `/stats` • `/faves`\n\n"
-        "Problems? @inxainee"
+        "Need help? @inxainee"
     )
-    embed.set_footer(text="Powered by lollipop fuel 🍭")
+    embed.set_footer(text="Lollipop-powered kindness 🦈")
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # === /stats ===
@@ -92,27 +92,27 @@ async def stats(interaction: discord.Interaction):
     users = len(chat_sessions)
     msgs = sum(user_message_count.values())
     avg = msgs // users if users else 0
-    embed = discord.Embed(title="🦈 Shark Stats", color=0xff69b4)
-    embed.add_field(name="Victims", value=users, inline=True)
-    embed.add_field(name="Bites", value=f"{msgs:,}", inline=True)
-    embed.add_field(name="Avg per victim", value=avg, inline=True)
+    embed = discord.Embed(title="Ellen Stats 🍭", color=0xffb3c6)
+    embed.add_field(name="Friends", value=users, inline=True)
+    embed.add_field(name="Messages", value=f"{msgs:,}", inline=True)
+    embed.add_field(name="Avg per friend", value=avg, inline=True)
     embed.set_footer(text="Model: gemini-2.5-flash | Memory: 30 days")
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # === /faves ===
-@bot.tree.command(name="faves", description="Top 10 pests (admin only)")
+@bot.tree.command(name="faves", description="Closest friends (admin only)")
 @discord.app_commands.checks.has_permissions(manage_guild=True)
 async def faves(interaction: discord.Interaction):
     if not user_message_count:
-        return await interaction.response.send_message("No pests yet… lucky me.", ephemeral=True)
+        return await interaction.response.send_message("No friends yet… but I’m here. 🍭", ephemeral=True)
     top = sorted(user_message_count.items(), key=lambda x: x[1], reverse=True)[:10]
-    lines = [f"**{i+1}** {bot.get_user(u).display_name if bot.get_user(u) else 'Ghost'} — {c:,} pokes" 
+    lines = [f"**{i+1}** {bot.get_user(u).display_name if bot.get_user(u) else 'Friend'} — {c:,} messages 🍭" 
              for i, (u, c) in enumerate(top)]
-    embed = discord.Embed(title="🦈 Top 10 Annoying Favorites", description="\n".join(lines), color=0xff1493)
+    embed = discord.Embed(title="Ellen’s Closest Friends 🦈", description="\n".join(lines), color=0xff69b4)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # === /reset ===
-@bot.tree.command(name="reset", description="ADMIN: Wipe pest memory")
+@bot.tree.command(name="reset", description="ADMIN: Clear memory")
 @discord.app_commands.checks.has_permissions(manage_guild=True)
 async def reset(interaction: discord.Interaction, member: discord.Member = None):
     uid = (member or interaction.user).id
@@ -121,9 +121,9 @@ async def reset(interaction: discord.Interaction, member: discord.Member = None)
         del chat_sessions[uid]
         user_last_seen.pop(uid, None)
         user_message_count.pop(uid, None)
-        await interaction.response.send_message(f"Memory of **{name}** erased. Finally. 🦈", ephemeral=True)
+        await interaction.response.send_message(f"Memory of **{name}** cleared… but I’ll miss you. 🍭", ephemeral=True)
     else:
-        await interaction.response.send_message("Never even noticed you.", ephemeral=True)
+        await interaction.response.send_message("No memory to clear.", ephemeral=True)
 
 # === GENERATE RESPONSE ===
 async def generate_response(uid: int, msg: str, count: int) -> str:
@@ -133,11 +133,11 @@ async def generate_response(uid: int, msg: str, count: int) -> str:
             model = genai.GenerativeModel('gemini-2.5-flash')
             chat = model.start_chat(history=[
                 {"role": "user", "parts": [ELLEN_SYSTEM_PROMPT]},
-                {"role": "model", "parts": ["*click* Tch, state your business. 🦈"]}
+                {"role": "model", "parts": ["…I was waiting. What do you need? 🍭"]}
             ])
             chat_sessions[uid] = chat
         except Exception as e:
-            return "Ugh, system glitch. Fix it yourself."
+            return "…System’s acting up. I’m still here."
     else:
         chat = chat_sessions[uid]
 
@@ -147,13 +147,13 @@ async def generate_response(uid: int, msg: str, count: int) -> str:
             chat.history = chat.history[-MAX_HISTORY * 2:]
         reply = resp.text.strip()
 
-        # Tsundere warmth after 30 messages
-        if count >= 30 and "🦈" in reply and "🍭" not in reply:
-            reply = reply.replace("🦈", "🍭 …dummy")
+        # Add warmth after 20 messages
+        if count >= 20 and "🍭" not in reply:
+            reply += " …don’t tell anyone. 🍭"
 
         return reply
     except Exception as e:
-        return "Tch, AI broke. Not my problem."
+        return "…A glitch. But I won’t leave."
 
 # === RUN ===
 if __name__ == "__main__":
