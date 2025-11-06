@@ -1,0 +1,1 @@
+worker: python ellen_bot.py
